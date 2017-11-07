@@ -2,6 +2,8 @@ from random import randint
 import pygame
 import time
 
+possibleXY = [[1, 1], [3, 1], [5, 1], [1, 3], [3, 3], [5, 3], [1, 5], [3, 5], [5, 5]]
+existing_squares = [0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 def main():
     pygame.init()
@@ -10,21 +12,23 @@ def main():
     font = pygame.font.SysFont("comicsansms", 72)
 
     score = 0
-    timeInt = 1.0
-    step_time = time.localtime(timeInt)
-    first_time = time.localtime(time.time())
-    possibleXY = [[1,1],[3,1],[5,1],[1,3],[3,3],[5,3],[1,5],[3,5],[5,5]]
-    existing_squares = [0,0,0,0,0,0,0,0,0]
+    timeInt = 2.0
+    step_time = timeInt*1000.0
+    first_time = time.time()*1000.0
     matrix = []
+    nextLevel = False
+    gameOver = False
 
     while True:
-        local_time = time.localtime(time.time())
-        if (time.mktime(local_time) - time.mktime(first_time)) > time.mktime(step_time):
-            numerSquare= randint(0, 7)
-            if(existing_squares[numerSquare] == 0):
-                matrix.append([possibleXY[numerSquare][0]*100, possibleXY[numerSquare][1]*100, numerSquare])
-                existing_squares[numerSquare] = 1
-            first_time = time.localtime(time.time())
+        local_time = time.time()*1000
+        if ((local_time - first_time) >= step_time):
+            while (~gameOver): #do while emulate
+                numerSquare= randint(0, 8)
+                if(existing_squares[numerSquare] == 0):
+                    matrix.append([possibleXY[numerSquare][0]*100, possibleXY[numerSquare][1]*100, numerSquare])
+                    existing_squares[numerSquare] = 1
+                    break
+            first_time = time.time()*1000
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -43,6 +47,17 @@ def main():
         if (matrix != None and len(matrix) > 0):
             for square in matrix:
                 pygame.draw.rect(screen, (0, 128, 255), pygame.Rect(square[0], square[1], 100, 100))
+        if(score % 10 == 0 and timeInt > 0 and nextLevel):
+            timeInt = 0.8*timeInt
+            step_time = timeInt*1000.0
+            nextLevel = False
+        if (score % 10 != 0):
+            nextLevel = True
+        if len(matrix) >= 9:
+            gameOver = True
+            textGM = font.render("GAME OVER", True, (128, 0, 0))
+            screen.blit(textGM, (300- textGM.get_width() // 2, 300 - textGM.get_height() // 2))
+
         text = font.render(str(score), True, (0, 128, 0))
         screen.blit(text, (50 - text.get_width() // 2, 50 - text.get_height() // 2))
         pygame.display.flip()
